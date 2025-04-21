@@ -71,7 +71,7 @@ namespace BrandSelector
 
         public override void SetDefaults()
         {
-            throw new System.NotImplementedException();
+            
         }
 
         public enum SomeEnum
