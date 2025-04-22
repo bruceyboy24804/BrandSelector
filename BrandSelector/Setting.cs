@@ -5,6 +5,7 @@ using Game.Settings;
 using Game.UI;
 using Game.UI.Widgets;
 using System.Collections.Generic;
+using Unity.Entities;
 
 namespace BrandSelector
 {
@@ -20,8 +21,11 @@ namespace BrandSelector
         public const string kSliderGroup = "Slider";
         public const string kDropdownGroup = "Dropdown";
 
+        private World m_GameWorld;
+
         public Setting(IMod mod) : base(mod)
         {
+            m_GameWorld = World.DefaultGameObjectInjectionWorld;
         }
 
         [SettingsUISection(kSection, kButtonGroup)]
@@ -37,6 +41,8 @@ namespace BrandSelector
         {
             set { Mod.log.Info("ButtonWithConfirmation clicked"); }
         }
+
+        
 
         [SettingsUISection(kSection, kToggleGroup)]
         public bool Toggle { get; set; }
@@ -121,6 +127,8 @@ namespace BrandSelector
                     m_Setting.GetOptionWarningLocaleID(nameof(Setting.ButtonWithConfirmation)),
                     "is it confirmation text which you want to show here?"
                 },
+
+                
 
                 { m_Setting.GetOptionLabelLocaleID(nameof(Setting.Toggle)), "Toggle" },
                 {

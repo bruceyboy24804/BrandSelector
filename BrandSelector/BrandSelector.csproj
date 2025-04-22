@@ -4,6 +4,7 @@
         <OutputType>Library</OutputType>
         <TargetFramework>net472</TargetFramework>
         <Configurations>Debug;Release</Configurations>
+        <LangVersion>9</LangVersion>
 
         <!--The file where mod information which is required for publishing mod on PDX mods are stored-->
         <PublishConfigurationPath>Properties\PublishConfiguration.xml</PublishConfigurationPath>
@@ -53,6 +54,9 @@
         <Reference Include="Unity.Mathematics">
             <Private>false</Private>
         </Reference>
+        <Reference Include="Colossal.Mathematics">
+            <Private>false</Private>
+        </Reference>
     </ItemGroup>
 
     <ItemGroup>
@@ -71,5 +75,10 @@
         <None Include="$(ModPropsFile)" Link="Properties\Mod.props"/>
         <None Include="$(ModTargetsFile)" Link="Properties\Mod.targets"/>
     </ItemGroup>
-
+    
+    <Target Name="InstallUI" AfterTargets="AfterBuild">
+		<Exec Command="npm run build" WorkingDirectory="$(ProjectDir)/UI" />
+	</Target>
+    
+    
 </Project>

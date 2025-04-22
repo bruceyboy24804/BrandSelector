@@ -1,4 +1,6 @@
-﻿using Colossal.Logging;
+﻿
+using BrandSelector.Systems;
+using Colossal.Logging;
 using Game;
 using Game.Modding;
 using Game.SceneFlow;
@@ -12,9 +14,13 @@ namespace BrandSelector
             .SetShowsErrorsInUI(false);
 
         private Setting m_Setting;
+        public static Mod Instance { get; private set; }
+        internal ILog Log { get; private set; }
+        public static readonly string ID = "BrandSelector";
 
         public void OnLoad(UpdateSystem updateSystem)
         {
+            Instance = this;
             log.Info(nameof(OnLoad));
 
             if (GameManager.instance.modManager.TryGetExecutableAsset(this, out var asset))
@@ -26,6 +32,8 @@ namespace BrandSelector
 
 
             AssetDatabase.global.LoadSettings(nameof(BrandSelector), m_Setting, new Setting(this));
+            updateSystem.UpdateAfter<BrandListSection>(SystemUpdatePhase.UIUpdate);
+            
         }
 
         public void OnDispose()
