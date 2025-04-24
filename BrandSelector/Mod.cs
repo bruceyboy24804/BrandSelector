@@ -5,6 +5,7 @@ using Game;
 using Game.Modding;
 using Game.SceneFlow;
 using Colossal.IO.AssetDatabase;
+using Unity.Entities;
 
 namespace BrandSelector
 {
@@ -32,8 +33,7 @@ namespace BrandSelector
 
 
             AssetDatabase.global.LoadSettings(nameof(BrandSelector), m_Setting, new Setting(this));
-            updateSystem.UpdateAfter<BrandListSection>(SystemUpdatePhase.UIUpdate);
-            
+            BrandListSection brandListSection  = World.DefaultGameObjectInjectionWorld?.GetOrCreateSystemManaged<BrandListSection>();
         }
 
         public void OnDispose()

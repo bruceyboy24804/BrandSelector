@@ -1,0 +1,21 @@
+.dropdownName {
+    flex: 1;
+}
+
+.selectedDropdownProfileItem {
+    background-color: rgba(5, 10, 20, 0.2);
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.selectedDropdownItem {
+    background-color: rgba(5, 10, 20, 0.2);
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.dropdownScroll {
+    max-height: 100rem;
+}
