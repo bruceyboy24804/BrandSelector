@@ -1,4 +1,4 @@
-﻿
+﻿﻿
 using BrandSelector.Systems;
 using Colossal.Logging;
 using Game;
@@ -16,13 +16,15 @@ namespace BrandSelector
 
         private Setting m_Setting;
         public static Mod Instance { get; private set; }
-        internal ILog Log { get; private set; }
         public static readonly string ID = "BrandSelector";
 
         public void OnLoad(UpdateSystem updateSystem)
         {
             Instance = this;
             log.Info(nameof(OnLoad));
+#if DEBUG
+            log.effectivenessLevel = Level.Debug;
+#endif
 
             if (GameManager.instance.modManager.TryGetExecutableAsset(this, out var asset))
                 log.Info($"Current mod asset at {asset.path}");

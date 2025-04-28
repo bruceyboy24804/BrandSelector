@@ -1,13 +1,12 @@
-﻿namespace BrandSelector.Extensions
+﻿
+namespace BrandSelector.Extensions
 {
     using System;
     using Colossal.UI.Binding;
     using Game.UI.InGame;
-    
+
     public abstract partial class ExtendedInfoSectionBase : InfoSectionBase
     {
-        
-
         public ValueBindingHelper<T> CreateBinding<T>(string key, T initialValue)
         {
             var helper = new ValueBindingHelper<T>(new(Mod.ID, key, initialValue, new GenericUIWriter<T>()));

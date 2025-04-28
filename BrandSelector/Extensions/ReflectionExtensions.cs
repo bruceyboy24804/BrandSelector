@@ -1,4 +1,4 @@
-﻿
+﻿﻿
 
 namespace BrandSelector.Extensions
 {
@@ -28,7 +28,7 @@ namespace BrandSelector.Extensions
             var memInf = GetMemberInfo(obj, memberName);
             if (memInf == null)
             {
-                Mod.Instance.Log.Error(new System.Exception("memberName"), $"{nameof(ReflectionExtensions)} {nameof(GetMemberInfo)} Couldn't find member name! ");
+                Mod.log.Error(new System.Exception("memberName"), $"{nameof(ReflectionExtensions)} {nameof(GetMemberInfo)} Couldn't find member name! ");
             }
 
             if (memInf is PropertyInfo)
@@ -57,7 +57,7 @@ namespace BrandSelector.Extensions
             var memInf = GetMemberInfo(obj, memberName);
             if (memInf == null)
             {
-                Mod.Instance.Log.Error(new System.Exception("memberName"), $"{nameof(ReflectionExtensions)} {nameof(GetMemberInfo)} Couldn't find member name! ");
+                Mod.log.Error(new System.Exception("memberName"), $"{nameof(ReflectionExtensions)} {nameof(GetMemberInfo)} Couldn't find member name! ");
             }
 
             var oldValue = obj.GetMemberValue(memberName);

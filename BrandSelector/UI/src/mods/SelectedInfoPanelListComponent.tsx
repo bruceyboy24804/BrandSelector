@@ -1,9 +1,8 @@
 import { getModule } from "cs2/modding";
 import { Theme } from "cs2/bindings";
-import { useValue, trigger } from "cs2/api";
+import { useValue, trigger, bindValue } from "cs2/api";
 import {LocalizedEntityName, useLocalization} from "cs2/l10n";
 import { VanillaComponentResolver } from "mods/VanillaComponentResolver/VanillaComponentResolver";
-import { selectedBrand$, availableBrands$, BrandInfo } from "./bindings";
 import {Dropdown,
     DropdownItem,
     DropdownToggle,} from "cs2/ui"
@@ -11,6 +10,12 @@ import mod from "mod.json"
 import styles from "./SelectedInfoPanelListComponent.module.scss";
 import {Entity, Name, NameType} from "cs2/bindings";
 import React from "react";
+import { BrandInfo } from "./Domain/BrandInfo";
+
+
+
+const availableBrands$ = bindValue<BrandInfo[]>(mod.id, "availableBrands");
+const selectedBrand$ = bindValue<BrandInfo>(mod.id, "selectedBrand");
 
 interface InfoSectionComponent {
 	group: string;
@@ -46,29 +51,29 @@ export const SelectedInfoPanelListComponent = (componentList: any): any => {
     // Create dropdown items for each available brand
     const brandOptions = availableBrands.map(brandInfo => {
       // Direct comparison is now possible using the name
-      const isSelected = selectedBrand && brandInfo.name === selectedBrand.name;
+      const isSelected = selectedBrand && brandInfo.Name === selectedBrand.Name;
       
       return (
         <DropdownItem
-          theme={DropdownStyle}
           value={brandInfo}
           closeOnSelect={true}
           onChange={() => trigger(mod.id, "selectBrand", brandInfo)}
-          className={isSelected ? styles.selectedDropdownItem : ""}
+          className={DropdownStyle.dropdownItem}
+          selected={isSelected}
         >
-          <div className={styles.dropdownName}>{brandInfo.name}</div>
+          <div className={styles.dropdownName}>{brandInfo.Name}</div>
         </DropdownItem>
       );
     });
 
     // Function to render brand name
     const renderSelectedBrand = () => {
-      if (!selectedBrand || !selectedBrand.entity) {
+      if (!selectedBrand || !selectedBrand.Entity) {
         return translate("BrandSelector.SELECT_BRAND", "Select Brand");
       }
       
       // Simply display the name we received from C# code
-      return selectedBrand.name;
+      return selectedBrand.Name;
     };
 
     return (
@@ -85,7 +90,9 @@ export const SelectedInfoPanelListComponent = (componentList: any): any => {
                 theme={DropdownStyle}
                 content={brandOptions}
               >
-                {renderSelectedBrand()}
+                <DropdownToggle disabled={false}>
+                  <div className={styles.dropdownName}>{renderSelectedBrand()}</div>
+                </DropdownToggle>
               </Dropdown>
             )
           }
@@ -96,4 +103,3 @@ export const SelectedInfoPanelListComponent = (componentList: any): any => {
 
   return componentList as any;
 };
-
