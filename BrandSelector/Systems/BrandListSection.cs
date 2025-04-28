@@ -70,37 +70,72 @@ namespace BrandSelector.Systems
         private void SelectBrand(BrandInfo brandInfo)
         {
             m_SelectedBrandInfo.Value = brandInfo;
-            
-            // Update the renter to the selected brand
+
             if (selectedEntity != Entity.Null &&
                 EntityManager.TryGetBuffer(selectedEntity, isReadOnly: true, out DynamicBuffer<Renter> renterBuffer) &&
                 renterBuffer.Length > 0)
             {
                 EntityCommandBuffer buffer = m_EndFrameBarrier.CreateCommandBuffer();
+                DynamicBuffer<Renter> newRenters = buffer.SetBuffer<Renter>(selectedEntity);
+                newRenters.Clear();
+
+                Entity oldCompanyEntity = Entity.Null;
+                int currentRent = 0;
+
+                // First, copy all household renters and find the old company
+                for (int i = 0; i < renterBuffer.Length; i++)
+                {
+                    if (!EntityManager.HasComponent<Game.Companies.CompanyData>(renterBuffer[i]))
+                    {
+                        newRenters.Add(renterBuffer[i]);
+                    }
+                    else
+                    {
+                        oldCompanyEntity = renterBuffer[i];
+                        if (EntityManager.HasComponent<PropertyRenter>(oldCompanyEntity))
+                        {
+                            currentRent = EntityManager.GetComponentData<PropertyRenter>(oldCompanyEntity).m_Rent;
+                        }
+                    }
+                }
+
+                if (oldCompanyEntity != Entity.Null)
+                {
+                    buffer.RemoveComponent<PropertyRenter>(oldCompanyEntity);
+                }
+
+                // Handle the company renter
                 for (int i = 0; i < renterBuffer.Length; i++)
                 {
                     if (EntityManager.TryGetComponent(renterBuffer[i], out PrefabRef prefabRef) &&
                         prefabRef.m_Prefab != Entity.Null &&
-                        EntityManager.TryGetBuffer(prefabRef.m_Prefab, isReadOnly: true, out DynamicBuffer<CompanyBrandElement> companyBrandElements) &&
                         EntityManager.HasComponent<Game.Companies.CompanyData>(renterBuffer[i]))
                     {
                         Dictionary<Entity, List<Entity>> compatibleCompanies;
                         if (TryFindCompatibleCompanies(prefabRef, out compatibleCompanies) &&
                             compatibleCompanies.ContainsKey(brandInfo.Entity))
                         {
-                            DynamicBuffer<Renter> newRenters = buffer.SetBuffer<Renter>(selectedEntity);
-                            newRenters.Clear();
-                            newRenters.Add(new Renter { m_Renter = compatibleCompanies[brandInfo.Entity][0] });
-                            m_Log.Debug($"{nameof(BrandListSection)}.{nameof(SelectBrand)} assigned new renter {compatibleCompanies[brandInfo.Entity][0]}");
+                            // Randomly select a compatible company
+                            var companies = compatibleCompanies[brandInfo.Entity];
+                            var randomIndex = UnityEngine.Random.Range(0, companies.Count);
+                            Entity newCompanyEntity = companies[randomIndex];
+
+                            newRenters.Insert(0, new Renter { m_Renter = newCompanyEntity });
+                            buffer.AddComponent(newCompanyEntity, new PropertyRenter
+                            {
+                                m_Property = selectedEntity,
+                                m_Rent = currentRent
+                            });
+
+                            m_Log.Debug($"{nameof(BrandListSection)}.{nameof(SelectBrand)} randomly assigned company renter {newCompanyEntity} with rent {currentRent}");
                             buffer.AddComponent(selectedEntity, new RentersUpdated(selectedEntity));
-
+                            buffer.AddComponent<Updated>(selectedEntity);
                         }
-
                         break;
                     }
                 }
             }
-            
+
             RequestUpdate();
         }
 
