@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using Colossal.Logging;
 using BrandSelector.Domain;
 using Game.Common;
+using Game.Companies;
+using Game.Economy;
 using Unity.Collections;
 
 namespace BrandSelector.Systems
@@ -20,6 +22,9 @@ namespace BrandSelector.Systems
         protected override string group => "BrandListSection";
         private ValueBindingHelper<BrandInfo[]> m_AvailableBrandInfos;
         private ValueBindingHelper<BrandInfo> m_SelectedBrandInfo;
+        
+        
+        
         private EntityQuery m_CompaniesQuery;
         private Entity m_PreviousSelection;
         private ILog m_Log;
@@ -36,11 +41,17 @@ namespace BrandSelector.Systems
             m_SelectedBrandInfo = CreateBinding("selectedBrand", "selectBrand", new BrandInfo("", Entity.Null), SelectBrand);
 
             CreateTrigger<BrandInfo>("selectBrand", SelectBrand);
+            
+            
 
             m_CompaniesQuery = SystemAPI.QueryBuilder()
                 .WithAll<Game.Companies.CompanyData, PrefabRef>()
                 .WithNone<Deleted, Game.Tools.Temp>()
                 .Build();
+            
+            
+
+            
         }
 
         private bool Visible()
@@ -188,7 +199,7 @@ namespace BrandSelector.Systems
         private void ProcessAvailableBrands()
         {
             List<BrandInfo> brandInfos = new List<BrandInfo>();
-            // Get current renter to identify selected brand
+            
             if (EntityManager.TryGetBuffer(selectedEntity, isReadOnly: true, out DynamicBuffer<Renter> renterBuffer) &&
                 renterBuffer.Length > 0)
             {
@@ -199,51 +210,37 @@ namespace BrandSelector.Systems
                         EntityManager.TryGetBuffer(prefabRef.m_Prefab, isReadOnly: true, out DynamicBuffer<CompanyBrandElement> companyBrandElements) &&
                         EntityManager.TryGetComponent(renterBuffer[i], out Game.Companies.CompanyData companyData))
                     {
-                        Dictionary<Entity, List<Entity>> compatibleCompanies;
-                        if (!TryFindCompatibleCompanies(prefabRef, out compatibleCompanies))
+                        // Check compatibility before adding brands
+                        if (TryFindCompatibleCompanies(prefabRef, out Dictionary<Entity, List<Entity>> compatibleCompanies))
                         {
-                            break;
-                        }
-
-                        for (int j = 0; j < companyBrandElements.Length; j++)
-                        {
-
-                            m_Log.Debug($"{nameof(BrandListSection)}.{nameof(ProcessAvailableBrands)} found a brand.");
-
-                            // Use NameSystem to get a proper brand name
-                            string brandName = "Unknown Brand";
-                            if (EntityManager.Exists(companyBrandElements[j].m_Brand))
+                            for (int j = 0; j < companyBrandElements.Length; j++)
                             {
-                                // Get the rendered name from the NameSystem
-                                brandName = m_NameSystem.GetRenderedLabelName(companyBrandElements[j].m_Brand);
-                            }
-                            BrandInfo brandInfo = new BrandInfo(brandName, companyBrandElements[j].m_Brand);
-
-                            if (compatibleCompanies.ContainsKey(companyBrandElements[j].m_Brand))
-                            {
-                                brandInfos.Add(brandInfo);
-
-                                m_Log.Debug($"{nameof(BrandListSection)}.{nameof(ProcessAvailableBrands)} added brand: {brandName} {companyBrandElements[j].m_Brand.Index} {companyBrandElements[j].m_Brand.Version}.");
-
-                                if (companyBrandElements[j].m_Brand == companyData.m_Brand)
+                                // Only add brands that have compatible companies
+                                if (compatibleCompanies.ContainsKey(companyBrandElements[j].m_Brand))
                                 {
-                                    m_SelectedBrandInfo.Value = brandInfo;
-                                    m_SelectedBrandInfo.Binding.TriggerUpdate();
-                                }
-                            } else
-                            {
-                                m_Log.Debug($"{nameof(BrandListSection)}.{nameof(ProcessAvailableBrands)} no compatible companies. did not add brand: {brandName} {companyBrandElements[j].m_Brand.Index} {companyBrandElements[j].m_Brand.Version}.");
-                                if (companyBrandElements[j].m_Brand == companyData.m_Brand)
-                                {
-                                    m_Log.Info($"{nameof(BrandListSection)}.{nameof(ProcessAvailableBrands)} company is not valid for selected brand!!!");
+                                    m_Log.Debug($"{nameof(BrandListSection)}.{nameof(ProcessAvailableBrands)} found a compatible brand.");
+
+                                    string brandName = "Unknown Brand";
+                                    if (EntityManager.Exists(companyBrandElements[j].m_Brand))
+                                    {
+                                        brandName = m_NameSystem.GetRenderedLabelName(companyBrandElements[j].m_Brand);
+                                    }
+                                    BrandInfo brandInfo = new BrandInfo(brandName, companyBrandElements[j].m_Brand);
+                                    
+                                    brandInfos.Add(brandInfo);
+                                    m_Log.Debug($"{nameof(BrandListSection)}.{nameof(ProcessAvailableBrands)} added compatible brand: {brandName} {companyBrandElements[j].m_Brand.Index} {companyBrandElements[j].m_Brand.Version}.");
+
+                                    if (companyBrandElements[j].m_Brand == companyData.m_Brand)
+                                    {
+                                        m_SelectedBrandInfo.Value = brandInfo;
+                                        m_SelectedBrandInfo.Binding.TriggerUpdate();
+                                    }
                                 }
                             }
                         }
-
                         break;
                     }
                 }
-                    
             }
 
             m_AvailableBrandInfos.Value = brandInfos.ToArray();
